@@ -1,6 +1,6 @@
 extends Node
 
-## Global game manager. Handles game state, scene transitions, and core game loop.
+## Global game manager. Handles game state, scene transitions, save/load, and core game loop.
 
 signal game_state_changed(new_state: GameState)
 signal stage_started(stage_number: int)
@@ -32,12 +32,22 @@ func _ready() -> void:
 func start_game() -> void:
 	PlayerData.reset()
 	StageManager.current_stage = 1
+	StageManager.reset_stage()
 	current_state = GameState.PLAYING
 	_load_battle_scene()
 
 
+func continue_game() -> void:
+	if PlayerData.load_game():
+		PlayerData.heal_full()
+		StageManager.reset_stage()
+		current_state = GameState.PLAYING
+		_load_battle_scene()
+
+
 func start_stage(stage_number: int) -> void:
 	StageManager.current_stage = stage_number
+	StageManager.reset_stage()
 	current_state = GameState.PLAYING
 	_load_battle_scene()
 	stage_started.emit(stage_number)
@@ -45,11 +55,14 @@ func start_stage(stage_number: int) -> void:
 
 func complete_stage() -> void:
 	current_state = GameState.STAGE_CLEAR
-	stage_completed.emit(StageManager.current_stage)
+	StageManager.current_stage += 1
+	PlayerData.heal_full()
+	PlayerData.save_game()
+	stage_completed.emit(StageManager.current_stage - 1)
 
 
 func advance_to_next_stage() -> void:
-	StageManager.current_stage += 1
+	StageManager.reset_stage()
 	current_state = GameState.PLAYING
 	_load_battle_scene()
 

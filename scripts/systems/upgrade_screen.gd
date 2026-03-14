@@ -1,8 +1,9 @@
 extends Control
 
-## Between-stage upgrade screen. Spend stat points and change class.
+## Between-stage upgrade screen with visual polish. Spend stat points and change class.
 
 var stat_labels: Dictionary = {}
+var stat_buttons: Dictionary = {}
 var points_label: Label
 
 
@@ -15,17 +16,40 @@ func _build_ui() -> void:
 	# Background
 	var bg := ColorRect.new()
 	bg.set_anchors_preset(PRESET_FULL_RECT)
-	bg.color = Color(0.18, 0.14, 0.12)
+	bg.color = Color(0.16, 0.13, 0.11)
 	add_child(bg)
 
+	# Decorative header bar
+	var header := ColorRect.new()
+	header.set_anchors_preset(PRESET_TOP_WIDE)
+	header.custom_minimum_size.y = 4
+	header.color = Color(0.6, 0.5, 0.3)
+	add_child(header)
+
+	var main_panel := PanelContainer.new()
+	main_panel.set_anchors_preset(PRESET_FULL_RECT)
+	main_panel.set_anchor_and_offset(SIDE_LEFT, 0.08, 0)
+	main_panel.set_anchor_and_offset(SIDE_RIGHT, 0.92, 0)
+	main_panel.set_anchor_and_offset(SIDE_TOP, 0.03, 0)
+	main_panel.set_anchor_and_offset(SIDE_BOTTOM, 0.97, 0)
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.14, 0.12, 0.1, 0.9)
+	panel_style.corner_radius_top_left = 10
+	panel_style.corner_radius_top_right = 10
+	panel_style.corner_radius_bottom_left = 10
+	panel_style.corner_radius_bottom_right = 10
+	panel_style.border_color = Color(0.5, 0.4, 0.3, 0.5)
+	panel_style.set_border_width_all(1)
+	panel_style.content_margin_left = 20
+	panel_style.content_margin_right = 20
+	panel_style.content_margin_top = 10
+	panel_style.content_margin_bottom = 10
+	main_panel.add_theme_stylebox_override("panel", panel_style)
+	add_child(main_panel)
+
 	var main_vbox := VBoxContainer.new()
-	main_vbox.set_anchors_preset(PRESET_FULL_RECT)
-	main_vbox.set_anchor_and_offset(SIDE_LEFT, 0.1, 0)
-	main_vbox.set_anchor_and_offset(SIDE_RIGHT, 0.9, 0)
-	main_vbox.set_anchor_and_offset(SIDE_TOP, 0.05, 0)
-	main_vbox.set_anchor_and_offset(SIDE_BOTTOM, 0.95, 0)
-	main_vbox.add_theme_constant_override("separation", 10)
-	add_child(main_vbox)
+	main_vbox.add_theme_constant_override("separation", 8)
+	main_panel.add_child(main_vbox)
 
 	# Title
 	var title := Label.new()
@@ -44,7 +68,7 @@ func _build_ui() -> void:
 	info_label.add_theme_color_override("font_color", Color(0.8, 0.7, 0.55))
 	main_vbox.add_child(info_label)
 
-	# Stat points available
+	# Stat points
 	points_label = Label.new()
 	points_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	points_label.add_theme_font_size_override("font_size", 22)
@@ -53,7 +77,7 @@ func _build_ui() -> void:
 
 	# Stat upgrade rows
 	var stats_container := VBoxContainer.new()
-	stats_container.add_theme_constant_override("separation", 8)
+	stats_container.add_theme_constant_override("separation", 6)
 	main_vbox.add_child(stats_container)
 
 	var stat_names := {
@@ -76,18 +100,16 @@ func _build_ui() -> void:
 	btn_row.add_theme_constant_override("separation", 20)
 	main_vbox.add_child(btn_row)
 
-	# Class change button (if available)
 	if TankClasses.can_evolve(PlayerData.tank_class, PlayerData.level):
-		var class_btn := Button.new()
-		class_btn.text = "Change Class"
-		class_btn.custom_minimum_size = Vector2(180, 50)
+		var class_btn := _create_styled_button("Change Class", Color(0.5, 0.35, 0.5))
 		class_btn.pressed.connect(_show_class_select)
 		btn_row.add_child(class_btn)
 
-	var continue_btn := Button.new()
-	continue_btn.text = "Continue"
-	continue_btn.custom_minimum_size = Vector2(180, 50)
-	continue_btn.pressed.connect(func(): GameManager.advance_to_next_stage())
+	var continue_btn := _create_styled_button("Continue", Color(0.35, 0.5, 0.3))
+	continue_btn.pressed.connect(func():
+		SfxManager.play_button_click()
+		GameManager.advance_to_next_stage()
+	)
 	btn_row.add_child(continue_btn)
 
 
@@ -109,17 +131,49 @@ func _create_stat_row(stat_key: String, display_name: String) -> HBoxContainer:
 	row.add_child(value_label)
 	stat_labels[stat_key] = value_label
 
+	var cost := UpgradeTree.STAT_COSTS.get(stat_key, 1)
 	var upgrade_btn := Button.new()
-	upgrade_btn.text = "+"
-	upgrade_btn.custom_minimum_size = Vector2(40, 40)
+	upgrade_btn.text = "+ (%d)" % cost
+	upgrade_btn.custom_minimum_size = Vector2(60, 35)
+	var btn_style := StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.4, 0.35, 0.25)
+	btn_style.corner_radius_top_left = 4
+	btn_style.corner_radius_top_right = 4
+	btn_style.corner_radius_bottom_left = 4
+	btn_style.corner_radius_bottom_right = 4
+	upgrade_btn.add_theme_stylebox_override("normal", btn_style)
 	upgrade_btn.pressed.connect(func(): _upgrade_stat(stat_key))
 	row.add_child(upgrade_btn)
+	stat_buttons[stat_key] = upgrade_btn
 
 	return row
 
 
+func _create_styled_button(text: String, color: Color) -> Button:
+	var btn := Button.new()
+	btn.text = text
+	btn.custom_minimum_size = Vector2(180, 50)
+	btn.add_theme_font_size_override("font_size", 18)
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	btn.add_theme_stylebox_override("normal", style)
+	var hover := StyleBoxFlat.new()
+	hover.bg_color = color.lightened(0.15)
+	hover.corner_radius_top_left = 8
+	hover.corner_radius_top_right = 8
+	hover.corner_radius_bottom_left = 8
+	hover.corner_radius_bottom_right = 8
+	btn.add_theme_stylebox_override("hover", hover)
+	return btn
+
+
 func _upgrade_stat(stat: String) -> void:
 	if PlayerData.spend_stat_point(stat):
+		SfxManager.play_button_click()
 		_refresh()
 
 
@@ -133,6 +187,11 @@ func _refresh() -> void:
 		else:
 			stat_labels[stat_key].text = "%d" % int(value)
 
+		# Disable buttons if not enough points
+		var cost := UpgradeTree.STAT_COSTS.get(stat_key, 1)
+		if stat_buttons.has(stat_key):
+			stat_buttons[stat_key].disabled = PlayerData.stat_points < cost
+
 
 func _show_class_select() -> void:
 	var evolutions := TankClasses.get_available_evolutions(PlayerData.tank_class)
@@ -141,12 +200,16 @@ func _show_class_select() -> void:
 
 	var popup := PanelContainer.new()
 	popup.set_anchors_preset(PRESET_CENTER)
-	popup.custom_minimum_size = Vector2(400, 300)
+	popup.custom_minimum_size = Vector2(420, 320)
 	popup.position -= popup.custom_minimum_size / 2
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.2, 0.16, 0.13)
+	style.bg_color = Color(0.18, 0.15, 0.12)
 	style.border_color = Color(0.6, 0.5, 0.35)
 	style.set_border_width_all(2)
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
 	popup.add_theme_stylebox_override("panel", style)
 	add_child(popup)
 
@@ -163,21 +226,30 @@ func _show_class_select() -> void:
 
 	for evo in evolutions:
 		var class_data := TankClasses.get_class_data(evo)
-		var btn := Button.new()
-		btn.text = "%s - %s" % [class_data["name"], class_data["description"]]
-		btn.custom_minimum_size.y = 50
+		var btn := _create_styled_button("%s" % class_data["name"], class_data.get("color", Color(0.5, 0.4, 0.3)))
+		btn.custom_minimum_size = Vector2(380, 45)
+		btn.tooltip_text = class_data["description"]
+
+		# Add description label
+		var row := VBoxContainer.new()
+		row.add_child(btn)
+		var desc := Label.new()
+		desc.text = "  %s" % class_data["description"]
+		desc.add_theme_font_size_override("font_size", 13)
+		desc.add_theme_color_override("font_color", Color(0.7, 0.6, 0.5))
+		row.add_child(desc)
+
 		btn.pressed.connect(func():
 			PlayerData.change_class(evo)
 			popup.queue_free()
-			# Rebuild the screen
 			for child in get_children():
 				child.queue_free()
 			_build_ui()
 			_refresh()
 		)
-		vbox.add_child(btn)
+		vbox.add_child(row)
 
-	var cancel_btn := Button.new()
-	cancel_btn.text = "Cancel"
+	var cancel_btn := _create_styled_button("Cancel", Color(0.35, 0.3, 0.25))
+	cancel_btn.custom_minimum_size = Vector2(120, 40)
 	cancel_btn.pressed.connect(func(): popup.queue_free())
 	vbox.add_child(cancel_btn)
