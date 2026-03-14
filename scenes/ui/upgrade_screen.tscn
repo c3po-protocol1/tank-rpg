@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://upgrade_scene"]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/systems/upgrade_screen.gd" id="1_upgrade"]
 
