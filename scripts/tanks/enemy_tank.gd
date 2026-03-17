@@ -46,9 +46,9 @@ func setup_entry(target_x: float, delay: float) -> void:
 
 
 func _apply_enemy_scaling() -> void:
-	var enemy_data := StageData.ENEMY_DATA.get(enemy_type, {})
+	var enemy_data: Dictionary = StageData.ENEMY_DATA.get(enemy_type, {})
 	var multiplier: float = enemy_data.get("stat_multiplier", 1.0)
-	var scale_factor := StageManager.get_difficulty_scale()
+	var scale_factor: float = StageManager.get_difficulty_scale()
 
 	max_hp *= multiplier * scale_factor
 	current_hp = max_hp
@@ -147,7 +147,7 @@ func _aim_at_player(delta: float) -> void:
 	target_angle += randf_range(-15.0, 15.0) * (1.0 - aim_accuracy)
 
 	var angle_diff := target_angle - barrel_angle
-	var adjust := sign(angle_diff) * minf(abs(angle_diff), 1.5) * delta * 60.0
+	var adjust: float = sign(angle_diff) * minf(abs(angle_diff), 1.5) * delta * 60.0
 	barrel_angle = clampf(barrel_angle + adjust, BARREL_MIN_ANGLE, BARREL_MAX_ANGLE)
 
 	if barrel_node:
@@ -161,7 +161,7 @@ func _calculate_firing_angle(to_target: Vector2, distance: float) -> float:
 	var dy := to_target.y
 	var v2 := launch_speed * launch_speed
 	var g := GRAVITY
-	var discriminant := v2 * v2 - g * (g * dx * dx + 2.0 * dy * v2)
+	var discriminant: float = v2 * v2 - g * (g * dx * dx + 2.0 * dy * v2)
 	if discriminant < 0:
 		return -45.0
 	var angle := atan((v2 - sqrt(discriminant)) / (g * dx))

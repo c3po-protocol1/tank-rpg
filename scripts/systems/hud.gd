@@ -32,7 +32,7 @@ func setup(player: PlayerTank) -> void:
 		player_ref.sp_changed.connect(_on_sp_changed)
 		_update_hp_display()
 		_update_sp_display()
-		_update_skill_button()
+		HudControls.update_skill_button(self)
 	PlayerData.xp_gained.connect(func(_amount): _update_xp_display())
 	PlayerData.level_up.connect(func(_lvl):
 		_update_level_display()

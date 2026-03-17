@@ -20,7 +20,7 @@ while IFS= read -r f; do
         echo "  ❌ $f: $lines lines (max 200)"
         ERRORS=$((ERRORS + 1))
     fi
-done < <(find . -name "*.gd" -not -path "./.godot/*" -not -path "./.git/*")
+done < <(find . -name "*.gd" -not -path "./.godot/*" -not -path "./.git/*" -not -path "./scripts/ci/*")
 
 # 2. class_name check
 echo ""
@@ -30,7 +30,7 @@ while IFS= read -r f; do
         echo "  ❌ $f: missing class_name"
         ERRORS=$((ERRORS + 1))
     fi
-done < <(find . -name "*.gd" -not -path "./.godot/*" -not -path "./.git/*" -not -path "*/autoload/*")
+done < <(find . -name "*.gd" -not -path "./.godot/*" -not -path "./.git/*" -not -path "./scripts/ci/*" -not -path "*/autoload/*")
 
 # 3. Layer dependency check (data/ must not import from scripts/)
 echo ""
@@ -57,7 +57,7 @@ while IFS= read -r f; do
         echo "  ⚠️  $f: $count potential magic numbers (review recommended)"
         WARNINGS=$((WARNINGS + 1))
     fi
-done < <(find . -name "*.gd" -not -path "./.godot/*" -not -path "./.git/*")
+done < <(find . -name "*.gd" -not -path "./.godot/*" -not -path "./.git/*" -not -path "./scripts/ci/*")
 
 # 5. Godot project import check
 echo ""
@@ -73,6 +73,26 @@ if command -v godot &>/dev/null; then
     fi
 else
     echo "  ⚠️  godot not in PATH, skipping import check"
+    WARNINGS=$((WARNINGS + 1))
+fi
+
+
+# 6. Run automated tests
+echo ""
+echo "🧪 Running automated tests..."
+if command -v godot &>/dev/null; then
+    test_output=$(timeout 20 godot --headless --path . --script scripts/ci/test_runner.gd 2>&1)
+    test_exit=$?
+    if [ $test_exit -ne 0 ]; then
+        echo "  ❌ Tests failed"
+        echo "$test_output" | grep "❌" | head -10
+        ERRORS=$((ERRORS + 1))
+    else
+        passed=$(echo "$test_output" | grep "ALL PASSED" | head -1)
+        echo "  ✅ $passed"
+    fi
+else
+    echo "  ⚠️  godot not in PATH, skipping tests"
     WARNINGS=$((WARNINGS + 1))
 fi
 

@@ -25,7 +25,7 @@ func _ready() -> void:
 
 
 func generate_terrain(preset: String = "gentle_hills") -> void:
-	var config := StageData.TERRAIN_PRESETS.get(preset, StageData.TERRAIN_PRESETS["flat"])
+	var config : Variant = StageData.TERRAIN_PRESETS.get(preset, StageData.TERRAIN_PRESETS["flat"])
 	hill_count = config.get("hills", 3)
 	roughness = config.get("roughness", 0.3)
 	_build_terrain_polygon()

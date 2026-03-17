@@ -99,7 +99,8 @@ func _explode() -> void:
 	if explosion_radius >= 35.0:
 		_trigger_screen_shake(explosion_radius * 0.15)
 
-	SfxManager.play_explosion()
+	if is_inside_tree() and get_node_or_null("/root/SfxManager"):
+		SfxManager.play_explosion()
 	queue_free()
 
 

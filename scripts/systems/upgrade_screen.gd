@@ -132,7 +132,7 @@ func _create_stat_row(stat_key: String, display_name: String) -> HBoxContainer:
 	row.add_child(value_label)
 	stat_labels[stat_key] = value_label
 
-	var cost := UpgradeTree.STAT_COSTS.get(stat_key, 1)
+	var cost : Variant = UpgradeTree.STAT_COSTS.get(stat_key, 1)
 	var upgrade_btn := Button.new()
 	upgrade_btn.text = "+ (%d)" % cost
 	upgrade_btn.custom_minimum_size = Vector2(60, 35)
@@ -189,7 +189,7 @@ func _refresh() -> void:
 			stat_labels[stat_key].text = "%d" % int(value)
 
 		# Disable buttons if not enough points
-		var cost := UpgradeTree.STAT_COSTS.get(stat_key, 1)
+		var cost : Variant = UpgradeTree.STAT_COSTS.get(stat_key, 1)
 		if stat_buttons.has(stat_key):
 			stat_buttons[stat_key].disabled = PlayerData.stat_points < cost
 

@@ -59,28 +59,31 @@ ui/                   # Can wire anything above.
 9. All game balance data in `data/` — never hardcode stats
 10. `snake_case` for files, variables, functions. `PascalCase` for class names.
 
-## Validation
+## Validation (MANDATORY before every commit)
 
 Before finishing any task, run:
 ```bash
-# Structure check
 bash scripts/ci/validate.sh
-
-# Visual check (captures screenshot of running game)
-bash scripts/ci/screenshot.sh
 ```
 
-If validation fails, fix the issues before committing.
+This checks: file sizes, class_names, layer deps, Godot import, AND automated tests.
+**If it fails, fix before committing. No exceptions.**
 
 ## Testing
 
 ```bash
-# Run Godot headless import check
-godot --headless --path . --import
+# Full test suite (data layer, tank creation, collision shapes, scenes)
+godot --headless --path . --script scripts/ci/test_runner.gd
 
-# Run game for 5 seconds and capture
-godot --headless --path . --quit-after 5
+# Quick import check
+godot --headless --path . --import
 ```
+
+### Critical Tests (never skip)
+- **CollisionShape2D exists** on every tank (TankBase, PlayerTank, EnemyTank)
+- **collision_layer/mask set** (tanks=2, terrain=1)
+- **body_node, barrel_node, barrel_tip** exist after _ready
+- **All scenes load** without errors
 
 ## File Size Rule
 
