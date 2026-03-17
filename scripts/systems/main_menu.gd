@@ -1,3 +1,4 @@
+class_name MainMenu
 extends Control
 
 ## Main menu with Start Game, Continue, and New Game confirmation.
