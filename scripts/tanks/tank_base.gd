@@ -48,12 +48,22 @@ const GRAVITY := 980.0
 const BARREL_MIN_ANGLE := -80.0
 const BARREL_MAX_ANGLE := 10.0
 
-
 func _ready() -> void:
 	_init_stats()
+	_setup_collision()
 	_setup_visuals()
 	add_to_group("tanks")
 
+## Add collision shape so CharacterBody2D works with physics.
+func _setup_collision() -> void:
+	collision_layer = 2  # tanks on layer 2
+	collision_mask = 1   # collide with terrain (layer 1)
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(50, 30)
+	shape.shape = rect
+	shape.position = Vector2(0, -15)
+	add_child(shape)
 
 func _init_stats() -> void:
 	max_hp = TankClasses.get_stat_at_level(tank_class, "hp", tank_level)
@@ -66,10 +76,8 @@ func _init_stats() -> void:
 	max_sp = TankClasses.get_stat_at_level(tank_class, "sp", tank_level)
 	current_sp = max_sp
 
-
 func _setup_visuals() -> void:
 	pass
-
 
 func _process(delta: float) -> void:
 	if not is_alive:
@@ -89,7 +97,6 @@ func _process(delta: float) -> void:
 			shield_reduction = 0.0
 			TankEffects.remove_shield_visual(self)
 
-
 ## Move tank horizontally.
 func move_horizontal(direction: float, _delta: float) -> void:
 	if not is_alive:
@@ -101,7 +108,6 @@ func move_horizontal(direction: float, _delta: float) -> void:
 		facing_right = false
 	move_and_slide()
 
-
 ## Adjust barrel angle.
 func aim(angle_delta: float, _delta: float) -> void:
 	if not is_alive:
@@ -109,7 +115,6 @@ func aim(angle_delta: float, _delta: float) -> void:
 	barrel_angle = clamp(barrel_angle + angle_delta, BARREL_MIN_ANGLE, BARREL_MAX_ANGLE)
 	if barrel_node:
 		barrel_node.rotation_degrees = barrel_angle
-
 
 ## Fire a projectile.
 func fire() -> void:
@@ -120,7 +125,6 @@ func fire() -> void:
 	can_fire = false
 	var timer := get_tree().create_timer(rld)
 	timer.timeout.connect(func(): can_fire = true)
-
 
 ## Fire projectile with optional modifiers (used by skills).
 func _fire_projectile(damage_mult: float = 1.0, _radius_override: float = 0.0, angle_offset: float = 0.0) -> void:
@@ -137,7 +141,6 @@ func _fire_projectile(damage_mult: float = 1.0, _radius_override: float = 0.0, a
 	get_tree().current_scene.add_child(proj)
 	shot_fired.emit(proj)
 
-
 ## Apply damage to this tank.
 func take_damage(raw_damage: float, _attacker: TankBase = null) -> float:
 	if not is_alive or dash_active:
@@ -153,12 +156,10 @@ func take_damage(raw_damage: float, _attacker: TankBase = null) -> float:
 		_die()
 	return effective_damage
 
-
 ## Heal this tank.
 func heal(amount: float) -> void:
 	current_hp = min(current_hp + amount, max_hp)
 	hp_changed.emit(current_hp, max_hp)
-
 
 ## Spend SP. Returns true if successful.
 func use_sp(amount: float) -> bool:
@@ -168,23 +169,19 @@ func use_sp(amount: float) -> bool:
 	sp_changed.emit(current_sp, max_sp)
 	return true
 
-
 ## Use class skill (delegates to TankSkills).
 func use_skill() -> void:
 	if skill_cooldown > 0.0:
 		return
 	TankSkills.execute(self)
 
-
 ## Get skill display name.
 func get_skill_name() -> String:
 	return TankSkills.get_skill_name(tank_class)
 
-
 ## Get skill SP cost.
 func get_skill_cost() -> int:
 	return TankSkills.get_skill_cost(tank_class)
-
 
 ## Handle death.
 func _die() -> void:
@@ -195,3 +192,4 @@ func _die() -> void:
 	tween.tween_property(self, "modulate", Color.WHITE, 0.1)
 	tween.tween_property(self, "scale", Vector2(0.1, 0.1), 0.3)
 	tween.tween_callback(queue_free)
+
