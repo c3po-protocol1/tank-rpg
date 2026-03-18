@@ -55,6 +55,46 @@ static func build(root: Control, hud: HUD) -> void:
 	hud.fire_btn.pressed.connect(func() -> void: _on_fire_pressed(hud))
 	right_panel.add_child(hud.fire_btn)
 
+	# Power gauge bar (visible during charging)
+	hud.power_gauge_bar = ProgressBar.new()
+	hud.power_gauge_bar.custom_minimum_size = Vector2(120, 16)
+	hud.power_gauge_bar.max_value = 100.0
+	hud.power_gauge_bar.value = 0.0
+	hud.power_gauge_bar.visible = false
+	hud.power_gauge_bar.show_percentage = false
+	var gauge_fill := StyleBoxFlat.new()
+	gauge_fill.bg_color = Color(0.9, 0.6, 0.1)
+	gauge_fill.corner_radius_top_left = 4
+	gauge_fill.corner_radius_top_right = 4
+	gauge_fill.corner_radius_bottom_left = 4
+	gauge_fill.corner_radius_bottom_right = 4
+	hud.power_gauge_bar.add_theme_stylebox_override("fill", gauge_fill)
+	var gauge_bg := StyleBoxFlat.new()
+	gauge_bg.bg_color = Color(0.2, 0.15, 0.1)
+	gauge_bg.corner_radius_top_left = 4
+	gauge_bg.corner_radius_top_right = 4
+	gauge_bg.corner_radius_bottom_left = 4
+	gauge_bg.corner_radius_bottom_right = 4
+	hud.power_gauge_bar.add_theme_stylebox_override("background", gauge_bg)
+	right_panel.add_child(hud.power_gauge_bar)
+
+	# Bullet type label + switch button
+	var bullet_row := HBoxContainer.new()
+	bullet_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	bullet_row.add_theme_constant_override("separation", 8)
+	right_panel.add_child(bullet_row)
+	hud.bullet_label = Label.new()
+	hud.bullet_label.text = "Standard"
+	hud.bullet_label.add_theme_font_size_override("font_size", 14)
+	hud.bullet_label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.6))
+	bullet_row.add_child(hud.bullet_label)
+	var switch_btn := create_button("D", Vector2(40, 35))
+	switch_btn.add_theme_font_size_override("font_size", 14)
+	switch_btn.pressed.connect(func() -> void:
+		if hud.player_ref: hud.player_ref.touch_switch()
+	)
+	bullet_row.add_child(switch_btn)
+
 	# Skill button (next to fire)
 	var skill_container := Control.new()
 	skill_container.custom_minimum_size = Vector2(120, 55)
@@ -146,3 +186,14 @@ static func _on_skill_pressed(hud: HUD) -> void:
 	if hud.player_ref:
 		hud.player_ref.touch_skill()
 		SfxManager.play_button_click()
+
+
+static func update_gauge(hud: HUD, value: float) -> void:
+	if hud.power_gauge_bar:
+		hud.power_gauge_bar.value = value * 100.0
+		hud.power_gauge_bar.visible = value > 0.0 or (hud.player_ref and hud.player_ref.charging)
+
+static func update_bullet(hud: HUD) -> void:
+	if hud.bullet_label and hud.player_ref:
+		var data: Dictionary = BulletTypes.get_data(hud.player_ref.current_bullet)
+		hud.bullet_label.text = data.get("name", "Standard")
