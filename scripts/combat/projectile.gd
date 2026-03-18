@@ -7,6 +7,7 @@ var initial_velocity: Vector2 = Vector2.ZERO
 var damage: float = 10.0
 var owner_tank: TankBase = null
 var explosion_radius: float = 25.0
+var bullet_color: Color = Color(0.85, 0.55, 0.15)
 
 const GRAVITY := 980.0
 const MAX_LIFETIME := 5.0
@@ -32,7 +33,7 @@ func _ready() -> void:
 		var angle := i * TAU / 8.0
 		points.append(Vector2(cos(angle), sin(angle)) * 4.0)
 	visual.polygon = points
-	visual.color = Color(0.85, 0.55, 0.15)
+	visual.color = bullet_color
 	add_child(visual)
 
 	# Trail effect

@@ -8,11 +8,11 @@ signal sp_changed(current: float, max_sp: float)
 signal tank_destroyed(tank: TankBase)
 signal shot_fired(projectile: Node2D)
 signal damage_dealt(amount: float, pos: Vector2)
+signal power_gauge_changed(value: float)
+signal bullet_type_changed(bullet_type: BulletTypes.BulletType)
 
 @export var tank_class: TankClasses.ClassType = TankClasses.ClassType.BASIC
 @export var tank_level: int = 1
-
-# Stats
 var max_hp: float = 100.0
 var current_hp: float = 100.0
 var atk: float = 15.0
@@ -22,13 +22,17 @@ var rld: float = 1.5
 var rng: float = 300.0
 var max_sp: float = 50.0
 var current_sp: float = 50.0
-
-# Combat state
 var barrel_angle: float = -45.0
 var can_fire: bool = true
 var is_alive: bool = true
 var facing_right: bool = true
-
+# Bullet system
+var current_bullet: BulletTypes.BulletType = BulletTypes.BulletType.STANDARD
+var available_bullets: Array = []
+# Power gauge (oscillates 0→1→0→1... press fire to start, press again to shoot)
+var charging: bool = false
+var power_gauge: float = 0.0
+var gauge_direction: float = 1.0
 # Skill state
 var skill_cooldown: float = 0.0
 var shield_active: bool = false
@@ -36,35 +40,30 @@ var shield_reduction: float = 0.0
 var shield_timer: float = 0.0
 var dash_active: bool = false
 var sp_regen_rate: float = 1.0
-
-# Nodes
 var body_node: Node2D
 var barrel_node: Node2D
 var barrel_tip: Marker2D
-
 var projectile_scene: PackedScene = preload("res://scenes/projectiles/projectile.tscn")
-
 const GRAVITY := 980.0
 const BARREL_MIN_ANGLE := -80.0
 const BARREL_MAX_ANGLE := 10.0
-
+const GAUGE_BASE_SPEED := 1.5
 func _ready() -> void:
 	_init_stats()
 	_setup_collision()
 	_setup_visuals()
+	available_bullets = BulletTypes.get_bullet_types(tank_class)
+	current_bullet = available_bullets[0]
 	add_to_group("tanks")
-
-## Add collision shape so CharacterBody2D works with physics.
 func _setup_collision() -> void:
-	collision_layer = 2  # tanks on layer 2
-	collision_mask = 1   # collide with terrain (layer 1)
+	collision_layer = 2
+	collision_mask = 1
 	var shape := CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
 	rect.size = Vector2(50, 30)
 	shape.shape = rect
 	shape.position = Vector2(0, -15)
 	add_child(shape)
-
 func _init_stats() -> void:
 	max_hp = TankClasses.get_stat_at_level(tank_class, "hp", tank_level)
 	current_hp = max_hp
@@ -75,29 +74,35 @@ func _init_stats() -> void:
 	rng = TankClasses.get_stat_at_level(tank_class, "rng", tank_level)
 	max_sp = TankClasses.get_stat_at_level(tank_class, "sp", tank_level)
 	current_sp = max_sp
-
 func _setup_visuals() -> void:
 	pass
-
 func _process(delta: float) -> void:
 	if not is_alive:
 		return
-	# SP regen
 	if current_sp < max_sp:
 		current_sp = min(current_sp + sp_regen_rate * delta, max_sp)
 		sp_changed.emit(current_sp, max_sp)
-	# Skill cooldown
 	if skill_cooldown > 0.0:
 		skill_cooldown -= delta
-	# Shield timer
 	if shield_active:
 		shield_timer -= delta
 		if shield_timer <= 0.0:
 			shield_active = false
 			shield_reduction = 0.0
 			TankEffects.remove_shield_visual(self)
+	# Power gauge oscillation
+	if charging:
+		var bullet_data: Dictionary = BulletTypes.get_data(current_bullet)
+		var speed: float = GAUGE_BASE_SPEED * bullet_data.get("gauge_speed", 1.0)
+		power_gauge += gauge_direction * speed * delta
+		if power_gauge >= 1.0:
+			power_gauge = 1.0
+			gauge_direction = -1.0
+		elif power_gauge <= 0.0:
+			power_gauge = 0.0
+			gauge_direction = 1.0
+		power_gauge_changed.emit(power_gauge)
 
-## Move tank horizontally.
 func move_horizontal(direction: float, _delta: float) -> void:
 	if not is_alive:
 		return
@@ -108,7 +113,6 @@ func move_horizontal(direction: float, _delta: float) -> void:
 		facing_right = false
 	move_and_slide()
 
-## Adjust barrel angle.
 func aim(angle_delta: float, _delta: float) -> void:
 	if not is_alive:
 		return
@@ -116,32 +120,45 @@ func aim(angle_delta: float, _delta: float) -> void:
 	if barrel_node:
 		barrel_node.rotation_degrees = barrel_angle
 
-## Fire a projectile.
 func fire() -> void:
-	if not is_alive or not can_fire:
-		return
-	_fire_projectile()
+	if not is_alive or not can_fire: return
+	_fire_projectile(1.0, 20.0, 0.0, 0.6)
 	TankEffects.show_muzzle_flash(self)
 	can_fire = false
-	var timer := get_tree().create_timer(rld)
-	timer.timeout.connect(func(): can_fire = true)
-
-## Fire projectile with optional modifiers (used by skills).
-func _fire_projectile(damage_mult: float = 1.0, _radius_override: float = 0.0, angle_offset: float = 0.0) -> void:
-	if barrel_tip == null:
+	get_tree().create_timer(rld).timeout.connect(func(): can_fire = true)
+func fire_press() -> void:
+	if not is_alive or not can_fire:
 		return
-	var proj: Node2D = projectile_scene.instantiate()
-	proj.global_position = barrel_tip.global_position
-	var fire_angle := deg_to_rad(barrel_angle + angle_offset)
-	var direction := 1.0 if facing_right else -1.0
-	var speed := rng * 2.0
-	proj.set("initial_velocity", Vector2(cos(fire_angle) * speed * direction, sin(fire_angle) * speed))
-	proj.set("damage", atk * damage_mult)
-	proj.set("owner_tank", self)
-	get_tree().current_scene.add_child(proj)
-	shot_fired.emit(proj)
+	if not charging:
+		charging = true
+		power_gauge = 0.0
+		gauge_direction = 1.0
+	else:
+		_shoot_with_power(power_gauge)
+		charging = false
+		power_gauge = 0.0
 
-## Apply damage to this tank.
+func _shoot_with_power(power: float) -> void:
+	var bullet_data: Dictionary = BulletTypes.get_data(current_bullet)
+	var dmg_mult: float = bullet_data.get("damage_mult", 1.0)
+	var radius: float = bullet_data.get("radius", 20.0)
+	_fire_projectile(dmg_mult, radius, 0.0, power)
+	TankEffects.show_muzzle_flash(self)
+	can_fire = false
+	power_gauge_changed.emit(0.0)
+	get_tree().create_timer(rld).timeout.connect(func(): can_fire = true)
+
+func switch_bullet() -> void:
+	if available_bullets.size() <= 1:
+		return
+	var idx: int = available_bullets.find(current_bullet)
+	idx = (idx + 1) % available_bullets.size()
+	current_bullet = available_bullets[idx]
+	bullet_type_changed.emit(current_bullet)
+
+func _fire_projectile(damage_mult: float = 1.0, radius: float = 20.0, angle_offset: float = 0.0, power: float = 0.5) -> void:
+	TankFireSystem.fire_projectile(self, damage_mult, radius, angle_offset, power)
+
 func take_damage(raw_damage: float, _attacker: TankBase = null) -> float:
 	if not is_alive or dash_active:
 		return 0.0
@@ -155,13 +172,10 @@ func take_damage(raw_damage: float, _attacker: TankBase = null) -> float:
 		current_hp = 0.0
 		_die()
 	return effective_damage
-
-## Heal this tank.
 func heal(amount: float) -> void:
 	current_hp = min(current_hp + amount, max_hp)
 	hp_changed.emit(current_hp, max_hp)
 
-## Spend SP. Returns true if successful.
 func use_sp(amount: float) -> bool:
 	if current_sp < amount:
 		return false
@@ -169,21 +183,13 @@ func use_sp(amount: float) -> bool:
 	sp_changed.emit(current_sp, max_sp)
 	return true
 
-## Use class skill (delegates to TankSkills).
 func use_skill() -> void:
 	if skill_cooldown > 0.0:
 		return
 	TankSkills.execute(self)
 
-## Get skill display name.
-func get_skill_name() -> String:
-	return TankSkills.get_skill_name(tank_class)
-
-## Get skill SP cost.
-func get_skill_cost() -> int:
-	return TankSkills.get_skill_cost(tank_class)
-
-## Handle death.
+func get_skill_name() -> String: return TankSkills.get_skill_name(tank_class)
+func get_skill_cost() -> int: return TankSkills.get_skill_cost(tank_class)
 func _die() -> void:
 	is_alive = false
 	tank_destroyed.emit(self)
@@ -192,4 +198,3 @@ func _die() -> void:
 	tween.tween_property(self, "modulate", Color.WHITE, 0.1)
 	tween.tween_property(self, "scale", Vector2(0.1, 0.1), 0.3)
 	tween.tween_callback(queue_free)
-

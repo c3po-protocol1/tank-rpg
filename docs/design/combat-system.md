@@ -28,3 +28,28 @@ damage = ATK * (100 / (100 + target.DEF))
 - Regenerates 1 SP/sec passively
 - Max SP determined by SP stat
 - Each skill has fixed SP cost
+
+
+## Bullet Types
+Each class has 2 bullet types. Press D to switch.
+
+| Type | Damage | Gauge Speed | Effect |
+|------|--------|-------------|--------|
+| Standard | 1.0x | Normal (1.0x) | Easy to aim |
+| Heavy | 1.8x | Fast (2.5x) | Harder to aim accurately |
+
+## Power Gauge System
+- Press F once → gauge starts oscillating (0% → 100% → 0% → ...)
+- Press F again → fires at current power level
+- Power affects RANGE only (0.3x to 1.0x of max speed)
+- Heavy bullets: gauge oscillates 2.5x faster → harder to time
+- No penalty for low/high power — just shorter/longer range
+
+## Controls
+| Action | Key |
+|--------|-----|
+| Move | ← → |
+| Aim | ↑ ↓ |
+| Fire (charge/shoot) | F |
+| Switch bullet | D |
+| Special skill | S |
