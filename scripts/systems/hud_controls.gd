@@ -59,8 +59,8 @@ static func build(root: Control, hud: HUD) -> void:
 	hud.power_gauge_bar = ProgressBar.new()
 	hud.power_gauge_bar.custom_minimum_size = Vector2(120, 16)
 	hud.power_gauge_bar.max_value = 100.0
-	hud.power_gauge_bar.value = 0.0
-	hud.power_gauge_bar.visible = false
+	hud.power_gauge_bar.value = 50.0
+	hud.power_gauge_bar.visible = true
 	hud.power_gauge_bar.show_percentage = false
 	var gauge_fill := StyleBoxFlat.new()
 	gauge_fill.bg_color = Color(0.9, 0.6, 0.1)
