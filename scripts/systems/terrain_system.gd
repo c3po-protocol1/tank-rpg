@@ -25,7 +25,7 @@ func _ready() -> void:
 
 
 func generate_terrain(preset: String = "gentle_hills") -> void:
-	var config : Variant = StageData.TERRAIN_PRESETS.get(preset, StageData.TERRAIN_PRESETS["flat"])
+	var config: Dictionary = StageData.TERRAIN_PRESETS.get(preset, StageData.TERRAIN_PRESETS["flat"])
 	hill_count = config.get("hills", 3)
 	roughness = config.get("roughness", 0.3)
 	_build_terrain_polygon()
@@ -129,7 +129,7 @@ func create_crater(impact_pos: Vector2, radius: float) -> void:
 
 	for i in range(terrain_polygon.size()):
 		var point := terrain_polygon[i]
-		var dist_x := abs(point.x - local_pos.x)
+		var dist_x: float = abs(point.x - local_pos.x)
 		if dist_x < radius * 1.5 and i > 0 and i < terrain_polygon.size() - 1:
 			if not inserted_crater:
 				inserted_crater = true

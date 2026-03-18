@@ -157,7 +157,7 @@ func _aim_at_player(delta: float) -> void:
 
 func _calculate_firing_angle(to_target: Vector2, distance: float) -> float:
 	var launch_speed := rng * 1.5
-	var dx := abs(to_target.x)
+	var dx: float = abs(to_target.x)
 	var dy := to_target.y
 	var v2 := launch_speed * launch_speed
 	var g := GRAVITY

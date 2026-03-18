@@ -197,4 +197,3 @@ func _update_level_display() -> void:
 func _update_xp_display() -> void:
 	xp_bar.max_value = PlayerData.xp_to_next_level()
 	xp_bar.value = PlayerData.xp
-

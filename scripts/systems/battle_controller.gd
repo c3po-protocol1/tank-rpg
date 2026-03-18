@@ -184,9 +184,9 @@ func _on_stage_cleared() -> void:
 	_show_stage_clear()
 
 func _show_stage_clear() -> void:
-	BattleUI.show_stage_clear(self, StageManager.current_stage, StageManager.total_xp_earned)
+	BattleUI.show_stage_clear(self, StageManager.current_stage, stage_xp_earned, stage_enemies_killed)
 func _show_game_over() -> void:
-	BattleUI.show_game_over(self)
+	BattleUI.show_game_over(self, StageManager.current_stage, stage_enemies_killed)
 func _fade_transition(fade_in: bool) -> void:
 	BattleUI.fade_transition(self, fade_in)
 func _setup_hud() -> void:

@@ -14,15 +14,15 @@ static func build(root: Control, hud: HUD) -> void:
 	var move_row := HBoxContainer.new()
 	move_row.add_theme_constant_override("separation", 10)
 
-	left_btn = create_button("<", Vector2(70, 70))
-	left_btn.button_down.connect(func(): _on_move_btn(hud, -1.0))
-	left_btn.button_up.connect(func(): _on_move_btn(hud, 0.0))
-	move_row.add_child(left_btn)
+	hud.left_btn = create_button("<", Vector2(70, 70))
+	hud.left_btn.button_down.connect(func() -> void: _on_move_btn(hud, -1.0))
+	hud.left_btn.button_up.connect(func() -> void: _on_move_btn(hud, 0.0))
+	move_row.add_child(hud.left_btn)
 
-	right_btn = create_button(">", Vector2(70, 70))
-	right_btn.button_down.connect(func(): _on_move_btn(hud, 1.0))
-	right_btn.button_up.connect(func(): _on_move_btn(hud, 0.0))
-	move_row.add_child(right_btn)
+	hud.right_btn = create_button(">", Vector2(70, 70))
+	hud.right_btn.button_down.connect(func() -> void: _on_move_btn(hud, 1.0))
+	hud.right_btn.button_up.connect(func() -> void: _on_move_btn(hud, 0.0))
+	move_row.add_child(hud.right_btn)
 	left_panel.add_child(move_row)
 
 	# Right side: aim + fire + skill
@@ -32,28 +32,28 @@ static func build(root: Control, hud: HUD) -> void:
 	right_panel.add_theme_constant_override("separation", 5)
 	root.add_child(right_panel)
 
-	aim_up_btn = create_button("^", Vector2(70, 50))
-	aim_up_btn.button_down.connect(func(): _on_aim_btn(hud, -1.0))
-	aim_up_btn.button_up.connect(func(): _on_aim_btn(hud, 0.0))
-	right_panel.add_child(aim_up_btn)
+	hud.aim_up_btn = create_button("^", Vector2(70, 50))
+	hud.aim_up_btn.button_down.connect(func() -> void: _on_aim_btn(hud, -1.0))
+	hud.aim_up_btn.button_up.connect(func() -> void: _on_aim_btn(hud, 0.0))
+	right_panel.add_child(hud.aim_up_btn)
 
-	aim_down_btn = create_button("v", Vector2(70, 50))
-	aim_down_btn.button_down.connect(func(): _on_aim_btn(hud, 1.0))
-	aim_down_btn.button_up.connect(func(): _on_aim_btn(hud, 0.0))
-	right_panel.add_child(aim_down_btn)
+	hud.aim_down_btn = create_button("v", Vector2(70, 50))
+	hud.aim_down_btn.button_down.connect(func() -> void: _on_aim_btn(hud, 1.0))
+	hud.aim_down_btn.button_up.connect(func() -> void: _on_aim_btn(hud, 0.0))
+	right_panel.add_child(hud.aim_down_btn)
 
 	# Fire button
-	fire_btn = create_button("FIRE", Vector2(120, 70))
-	fire_btn.add_theme_font_size_override("font_size", 20)
+	hud.fire_btn = create_button("FIRE", Vector2(120, 70))
+	hud.fire_btn.add_theme_font_size_override("font_size", 20)
 	var fire_style := StyleBoxFlat.new()
 	fire_style.bg_color = Color(0.7, 0.25, 0.15)
 	fire_style.corner_radius_top_left = 8
 	fire_style.corner_radius_top_right = 8
 	fire_style.corner_radius_bottom_left = 8
 	fire_style.corner_radius_bottom_right = 8
-	fire_btn.add_theme_stylebox_override("normal", fire_style)
-	fire_btn.pressed.connect(_on_fire_pressed)
-	right_panel.add_child(fire_btn)
+	hud.fire_btn.add_theme_stylebox_override("normal", fire_style)
+	hud.fire_btn.pressed.connect(func() -> void: _on_fire_pressed(hud))
+	right_panel.add_child(hud.fire_btn)
 
 	# Skill button (next to fire)
 	var skill_container := Control.new()
@@ -85,19 +85,19 @@ static func build(root: Control, hud: HUD) -> void:
 	skill_disabled_style.corner_radius_bottom_left = 8
 	skill_disabled_style.corner_radius_bottom_right = 8
 	hud.skill_btn.add_theme_stylebox_override("disabled", skill_disabled_style)
-	hud.skill_btn.pressed.connect(_on_skill_pressed)
+	hud.skill_btn.pressed.connect(func() -> void: _on_skill_pressed(hud))
 	skill_container.add_child(hud.skill_btn)
 
 	# Cooldown overlay label
-	skill_cooldown_label = Label.new()
-	skill_cooldown_label.text = ""
-	skill_cooldown_label.visible = false
-	skill_cooldown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	skill_cooldown_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	skill_cooldown_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	skill_cooldown_label.add_theme_font_size_override("font_size", 18)
-	skill_cooldown_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.3))
-	skill_container.add_child(skill_cooldown_label)
+	hud.skill_cooldown_label = Label.new()
+	hud.skill_cooldown_label.text = ""
+	hud.skill_cooldown_label.visible = false
+	hud.skill_cooldown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hud.skill_cooldown_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hud.skill_cooldown_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hud.skill_cooldown_label.add_theme_font_size_override("font_size", 18)
+	hud.skill_cooldown_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.3))
+	skill_container.add_child(hud.skill_cooldown_label)
 
 
 static func update_skill_button(hud: HUD) -> void:
@@ -127,12 +127,12 @@ static func create_button(text: String, min_size: Vector2) -> Button:
 	return btn
 
 
-static func _on_move_btn(hud, hud: HUD, direction: float) -> void:
+static func _on_move_btn(hud: HUD, direction: float) -> void:
 	if hud.player_ref:
 		hud.player_ref.set_touch_move(direction)
 
 
-static func _on_aim_btn(hud, hud: HUD, direction: float) -> void:
+static func _on_aim_btn(hud: HUD, direction: float) -> void:
 	if hud.player_ref:
 		hud.player_ref.set_touch_aim(direction)
 
@@ -146,5 +146,3 @@ static func _on_skill_pressed(hud: HUD) -> void:
 	if hud.player_ref:
 		hud.player_ref.touch_skill()
 		SfxManager.play_button_click()
-
-

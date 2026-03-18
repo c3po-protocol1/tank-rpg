@@ -4,9 +4,9 @@ extends RefCounted
 ## Builds visual representation for enemy tanks based on type.
 
 static func setup(tank: EnemyTank) -> void:
-	var enemy_data := StageData.ENEMY_DATA.get(tank.enemy_type, {})
+	var enemy_data: Dictionary = StageData.ENEMY_DATA.get(tank.enemy_type, {})
 	var color: Color = enemy_data.get("color", Color(0.45, 0.4, 0.35))
-	facing_right = false
+	tank.facing_right = false
 
 	tank.body_node = Node2D.new()
 	tank.add_child(tank.body_node)
@@ -65,7 +65,7 @@ static func setup(tank: EnemyTank) -> void:
 
 	tank.barrel_tip = Marker2D.new()
 	tank.barrel_tip.position = Vector2(-barrel_len - 3, 0)
-	tank.barrel_node.add_child(barrel_tip)
+	tank.barrel_node.add_child(tank.barrel_tip)
 
 	# Tracks
 	var track_w := 60.0 * body_scale
@@ -82,11 +82,11 @@ static func setup(tank: EnemyTank) -> void:
 		wheel.position = Vector2(-20 + i * 14, 3)
 		tank.body_node.add_child(wheel)
 
-	barrel_node.rotation_degrees = -(180.0 + barrel_angle)
+	tank.barrel_node.rotation_degrees = -(180.0 + tank.barrel_angle)
 
 	# Scale for boss/sub-boss
 	if body_scale != 1.0:
-		body_node.scale = Vector2(body_scale, body_scale)
+		tank.body_node.scale = Vector2(body_scale, body_scale)
 
 
 static func _create_wheel(radius: float, color: Color) -> Polygon2D:
@@ -98,5 +98,3 @@ static func _create_wheel(radius: float, color: Color) -> Polygon2D:
 	wheel.polygon = points
 	wheel.color = color
 	return wheel
-
-

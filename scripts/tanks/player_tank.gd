@@ -57,7 +57,7 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("fire"):
 		fire()
 	# Skill
-	if Input.is_action_just_pressed("skill"):
+	if Input.is_action_just_pressed("use_skill"):
 		use_skill()
 
 
