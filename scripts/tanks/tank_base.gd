@@ -135,7 +135,7 @@ func _fire_projectile(damage_mult: float = 1.0, _radius_override: float = 0.0, a
 	var fire_angle := deg_to_rad(barrel_angle + angle_offset)
 	var direction := 1.0 if facing_right else -1.0
 	var speed := rng * 2.0
-	proj.set("velocity", Vector2(cos(fire_angle) * speed * direction, sin(fire_angle) * speed))
+	proj.set("initial_velocity", Vector2(cos(fire_angle) * speed * direction, sin(fire_angle) * speed))
 	proj.set("damage", atk * damage_mult)
 	proj.set("owner_tank", self)
 	get_tree().current_scene.add_child(proj)
