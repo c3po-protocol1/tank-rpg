@@ -1,116 +1,127 @@
-# Tank RPG - Indie Mobile Game
+# Tank RPG — 2D Side-Scrolling Tank RPG
 
-A 2D side-scrolling tank RPG built with Godot 4. Kill enemy tanks, gain XP, upgrade stats, and evolve through class trees.
+인디 모바일 탱크 RPG. 스테이지를 클리어하고, 경험치를 얻고, 탱크를 업그레이드하세요.
 
-## Game Overview
+## Tech Stack
 
-- **Genre**: 2D Side-scrolling Tank RPG
-- **Platform**: iOS + Android (Godot 4 mobile export)
-- **Art Style**: Cartoon/comic, brown/muted color palette
+| Component | Technology |
+|-----------|-----------|
+| Engine | Godot 4.6+ |
+| Language | GDScript 2.0 |
+| Platform | iOS, Android |
+| Art Style | Cartoon, brown/muted tones |
 
-## How to Play
+## Development Setup
 
-- **Move**: Left/Right buttons (touch) or A/D keys
-- **Aim**: Up/Down buttons (touch) or W/S keys
-- **Fire**: FIRE button (touch) or Spacebar
-- Projectiles follow physics arcs and create craters in terrain
-- Destroy all enemies to clear a stage
+### 1. Install Godot 4
 
-## Game Flow
+**macOS (Homebrew):**
+```bash
+brew install --cask godot
+```
 
-1. Start with a Basic Tank
-2. Clear stages by destroying all enemy tanks
-3. Gain XP from kills → Level up → Get stat points
-4. Spend stat points on HP, ATK, DEF, SPD, RLD, RNG, SP
-5. At level 10/25/50: unlock class changes (Dealer, Tanker, Support, Artillery, Scout)
-6. Sub-boss every 5 stages, Boss every 10 stages
+**macOS (manual):**
+- Download from https://godotengine.org/download
+- Move `Godot.app` to `/Applications/`
+
+**Verify:**
+```bash
+godot --version
+# Should output: 4.6.x.stable...
+```
+
+### 2. Clone & Open
+
+```bash
+git clone https://github.com/c3po-protocol1/tank-rpg.git
+cd tank-rpg
+```
+
+**Open in Godot Editor:**
+```bash
+godot --editor --path .
+```
+
+Or: Open Godot → Import → select `project.godot`
+
+### 3. Run the Game
+
+**From Godot Editor:**
+- Press `F5` (or ▶️ Play button)
+
+**From terminal:**
+```bash
+godot --path .
+```
+
+**Headless (CI/testing):**
+```bash
+godot --headless --path . --quit-after 5
+```
+
+### 4. Run Tests
+
+```bash
+# Full validation (file sizes, structure, tests)
+bash scripts/ci/validate.sh
+
+# Tests only (30 automated tests)
+godot --headless --path . --script scripts/ci/test_runner.gd
+
+# Structure check
+bash scripts/ci/structure.sh
+
+# Screenshot capture (requires Peekaboo on macOS)
+bash scripts/ci/screenshot.sh
+```
+
+### 5. Controls
+
+| Action | Keyboard | Touch |
+|--------|----------|-------|
+| Move | A / D | L / R buttons |
+| Aim | W / S | Up / Down buttons |
+| Fire | Space | FIRE button |
+| Skill | E | SKILL button |
 
 ## Project Structure
 
 ```
 tank-rpg/
-├── project.godot          # Godot 4 project config (mobile-ready)
-├── export_presets.cfg     # Android + iOS export presets
-├── icon.svg               # App icon
-├── scenes/
-│   ├── main.tscn          # Entry scene (main menu)
-│   ├── main_menu.tscn     # Main menu scene
-│   ├── battle.tscn        # Battle stage scene
-│   ├── projectiles/
-│   │   └── projectile.tscn
-│   └── ui/
-│       ├── hud.tscn       # Battle HUD
-│       └── upgrade_screen.tscn
+├── CLAUDE.md              # Agent index (for Claude Code)
+├── README.md              # This file
+├── project.godot          # Godot project config
+├── data/                  # Game data (stats, stages, colors)
 ├── scripts/
-│   ├── autoload/
-│   │   ├── game_manager.gd   # Game state, scene transitions
-│   │   ├── player_data.gd    # Persistent player stats, XP, level
-│   │   └── stage_manager.gd  # Stage progression, enemy tracking
-│   ├── tanks/
-│   │   ├── tank_base.gd      # Base class: movement, aiming, firing, HP
-│   │   ├── player_tank.gd    # Player input (touch + keyboard)
-│   │   └── enemy_tank.gd     # AI: aim at player, fire, move
-│   ├── combat/
-│   │   └── projectile.gd     # Physics arc, damage, explosions
-│   └── systems/
-│       ├── battle_controller.gd  # Stage setup, spawning, win/lose
-│       ├── terrain_system.gd     # Destructible polygon terrain
-│       ├── hud.gd                # HP/SP bars, touch controls
-│       ├── upgrade_screen.gd     # Stat allocation, class change
-│       └── main_menu.gd          # Title screen
-├── data/
-│   ├── tank_classes.gd    # Class definitions, base stats, evolution tree
-│   ├── stage_data.gd      # Stage configs, enemy types, terrain presets
-│   └── upgrade_tree.gd    # XP/level formulas, skill definitions
-├── assets/
-│   ├── sprites/
-│   ├── fonts/
-│   └── audio/
-└── ui/
-    ├── components/
-    └── screens/
+│   ├── autoload/          # Global singletons
+│   ├── systems/           # Game systems (battle, HUD, terrain)
+│   ├── tanks/             # Tank entities (player, enemy, base)
+│   ├── combat/            # Projectiles
+│   └── ci/                # Test runner, validation scripts
+├── scenes/                # Godot scene files (.tscn)
+└── docs/                  # Design docs, architecture, plans
 ```
 
-## Core Systems
+## Gameplay
 
-### Tank Classes (RPG-style)
-| Class | Role | Strengths |
-|-------|------|-----------|
-| Basic | Starter | Balanced stats |
-| Dealer | DPS | High ATK, fast reload |
-| Tanker | Tank | High HP, high DEF |
-| Support | Healer | Repair, buffs, high SP |
-| Artillery | Range | Long range, high damage |
-| Scout | Speed | Fast movement, evasive |
+- **Stage-based**: Clear enemies → XP → upgrade → next stage
+- **6 tank classes**: Basic, Dealer, Tanker, Support, Artillery, Scout
+- **Boss fights**: Sub-boss every 5 stages, Boss every 10
+- **Skills**: Each class has a unique ability (costs SP)
+- **Destructible terrain**: Projectiles create craters
 
-### Stats
-- **HP** - Health Points
-- **ATK** - Attack Power (damage per shot)
-- **DEF** - Defense (damage reduction: `damage * 100/(100+DEF)`)
-- **SPD** - Movement Speed
-- **RLD** - Reload Speed (seconds between shots)
-- **RNG** - Range (projectile launch speed)
-- **SP** - Skill Points (mana for abilities)
+## Mobile Export
 
-### Combat
-- Physics-based projectile arcs
-- Destructible terrain (polygon craters on impact)
-- ATK vs DEF damage formula
-- Enemy AI with configurable accuracy, fire rate, movement
+Export presets for iOS and Android are in `export_presets.cfg`.
 
-### Progression
-- XP from kills (scales with stage)
-- 3 stat points per level
-- Class evolution at levels 10, 25, 50
-- Difficulty scaling: +15% per stage
+```bash
+# Android
+godot --headless --path . --export-release Android
 
-## Tech Stack
+# iOS
+godot --headless --path . --export-release iOS
+```
 
-- **Engine**: Godot 4.2+
-- **Language**: GDScript 2.0
-- **Rendering**: Mobile renderer (ETC2/ASTC)
-- **Input**: Touch + keyboard (emulate_touch_from_mouse enabled)
+## License
 
-## Development
-
-Open in Godot 4.2+ and press F5 to run. Uses placeholder graphics (ColorRect, Polygon2D shapes).
+Private project.

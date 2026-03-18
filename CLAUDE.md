@@ -1,100 +1,31 @@
-# CLAUDE.md — Tank RPG Harness
+# CLAUDE.md — Tank RPG
 
-You are working on **Tank RPG**, a 2D side-scrolling tank RPG built in Godot 4.6+ (GDScript).
-This file is your entry point. Read it first. Follow it always.
+2D side-scrolling tank RPG. Godot 4.6+ (GDScript). Mobile (iOS/Android).
 
-## Quick Start
+## Where to Find Things
 
-```
-Engine: Godot 4.6+ (GDScript 2.0)
-Platform: iOS + Android (mobile-first)
-Art: Cartoon style, brown/muted tones
-```
-
-## Documentation Map
-
-| What | Where |
-|------|-------|
-| Game design (gameplay, classes, stages) | `docs/design/game-design-document.md` |
-| Combat system (damage, projectiles, physics) | `docs/design/combat-system.md` |
-| Progression (XP, levels, class evolution) | `docs/design/progression-system.md` |
-| UI/UX spec (touch controls, screen flow) | `docs/design/ui-ux-spec.md` |
-| Layer rules (dependency direction) | `docs/architecture/layer-rules.md` |
-| Domain map (what goes where) | `docs/architecture/domain-map.md` |
-| Golden principles (style, patterns) | `docs/architecture/golden-principles.md` |
+| Need | Location |
+|------|----------|
+| How to install & run | `README.md` |
+| Game design & gameplay | `docs/design/game-design-document.md` |
+| Combat mechanics | `docs/design/combat-system.md` |
+| Progression & XP | `docs/design/progression-system.md` |
+| UI/UX & controls | `docs/design/ui-ux-spec.md` |
+| Layer dependency rules | `docs/architecture/layer-rules.md` |
+| File/folder structure | `docs/architecture/domain-map.md` |
+| Code style & principles | `docs/architecture/golden-principles.md` |
 | Roadmap & milestones | `docs/plans/roadmap.md` |
 | Decision log | `docs/plans/decision-log.md` |
 | Quality grades | `docs/quality/grades.md` |
 | Pre-merge checklist | `docs/quality/checklist.md` |
-| Tech debt tracker | `docs/tech-debt/tracker.md` |
+| Tech debt | `docs/tech-debt/tracker.md` |
+| Color palette | `data/colors.gd` |
 
-## Architecture — Layer Rules (MANDATORY)
+## Before Every Commit
 
-One-way dependency only. Never import backwards.
-
-```
-Data → Systems → Entities → Scenes → UI
-
-data/                 # ZERO imports. Pure data definitions.
-scripts/autoload/     # Import data/ only. Global singletons.
-scripts/systems/      # Import data/ + autoload/.
-scripts/tanks/        # Import data/ + autoload/ + systems/.
-scripts/combat/       # Import data/ + autoload/ + systems/.
-scenes/               # Can wire anything above.
-ui/                   # Can wire anything above.
-```
-
-**If you violate this, stop and restructure.**
-
-## Golden Principles
-
-1. `class_name` on every script
-2. Type everything: `var x: int`, `func foo() -> void`
-3. Signals over direct references between nodes
-4. Max 200 lines per file — split if larger
-5. No magic numbers — use constants or `data/` files
-6. Every public function gets a `##` doc comment
-7. Colors: use `data/colors.gd` constants (brown palette only)
-8. Touch-first: every interactive element min 44×44px
-9. All game balance data in `data/` — never hardcode stats
-10. `snake_case` for files, variables, functions. `PascalCase` for class names.
-
-## Validation (MANDATORY before every commit)
-
-Before finishing any task, run:
 ```bash
 bash scripts/ci/validate.sh
 ```
 
-This checks: file sizes, class_names, layer deps, Godot import, AND automated tests.
-**If it fails, fix before committing. No exceptions.**
-
-## Testing
-
-```bash
-# Full test suite (data layer, tank creation, collision shapes, scenes)
-godot --headless --path . --script scripts/ci/test_runner.gd
-
-# Quick import check
-godot --headless --path . --import
-```
-
-### Critical Tests (never skip)
-- **CollisionShape2D exists** on every tank (TankBase, PlayerTank, EnemyTank)
-- **collision_layer/mask set** (tanks=2, terrain=1)
-- **body_node, barrel_node, barrel_tip** exist after _ready
-- **All scenes load** without errors
-
-## File Size Rule
-
-If any `.gd` file exceeds 200 lines, split it. No exceptions. This keeps agent context windows efficient and code reviewable.
-
-## Commit Style
-
-```
-feat: description     # new feature
-fix: description      # bug fix  
-refactor: description # restructure
-docs: description     # documentation
-chore: description    # tooling, CI
-```
+Runs: file sizes, class_names, layer deps, Godot import, 30 automated tests.
+**Must pass. No exceptions.**
