@@ -71,19 +71,21 @@ func _physics_process(delta: float) -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if body == owner_tank:
 		return
-
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
 	if body is TankBase:
-		body.take_damage(damage, owner_tank)
-		_explode()
-	elif body.is_in_group("terrain"):
-		_create_crater(body)
-		_explode()
+		body.call_deferred("take_damage", damage, owner_tank)
+	elif body.is_in_group("terrain") and body.has_method("create_crater"):
+		body.call_deferred("create_crater", global_position, explosion_radius)
+	call_deferred("_explode")
 
 
 func _on_area_entered(area: Area2D) -> void:
-	if area.is_in_group("terrain"):
-		_create_crater(area)
-		_explode()
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
+	if area.is_in_group("terrain") and area.has_method("create_crater"):
+		area.call_deferred("create_crater", global_position, explosion_radius)
+	call_deferred("_explode")
 
 
 func _create_crater(terrain_node: Node2D) -> void:
